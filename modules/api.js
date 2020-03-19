@@ -5,8 +5,10 @@ const async = require('async');
 const csvHeaders = require('csv-headers');
 var es = require('event-stream');
 
-const CSV_FILE_PATH = './utils/bezkoder.csv'
+const CSVReader = require('../utils/csvParser')
+const CSV_FILE_PATH = './utils/US_Accidents_Dec19.csv'
 const TABLE_NAME = 'Table-A';
+
 
 const LoadCsvData = function (_cb) {
 
@@ -39,11 +41,7 @@ const LoadCsvData = function (_cb) {
       mysql.schema
         .createTable(TABLE_NAME, (table) => {
           headers.forEach((col_name) => {
-            if (col_name.toLowerCase() == 'id') {
-              table.increments('ID')
-                .primary()
-            }
-            else table.text(col_name)
+            table.text(col_name)
           })
         })
         .then(data => {
@@ -56,50 +54,21 @@ const LoadCsvData = function (_cb) {
         })
     }],
     populate_table_data: ['create_new_table', function (result, cb) {
-      fs
-        .createReadStream(CSV_FILE_PATH)
-        .pipe(es.split())
-        .pipe(
-          es
-            .mapSync(function (line) {
-              console.log(line)
-            })
-            .on('error', function (err) {
-              console.log('Error while reading file.', err);
-            })
-            .on('end', function () {
+      let parser = new CSVReader(CSV_FILE_PATH, 1000, result.list_data_headers.headers)
 
-            }),
-        );
-      // fs.createReadStream(CSV_FILE_PATH)
-      //   .pipe(parse({
-      //     delimiter: ',',
-      //     columns: true,
-      //     relax_column_count: true
-      //   }, (err, data) => {
-      //     if (err) {
-      //       console.log(err)
-      //       return cb(err);
-      //     }
-
-      //     async.eachSeries(data, (row, next) => {
-      //       mysql(TABLE_NAME)
-      //         .insert(row)
-      //         .then(() => {
-      //           return next();
-      //         })
-      //         .catch((err) => {
-      //           console.log(err)
-
-      //           return cb(err)
-      //         })
-      //     },
-      //       err => {
-      //         if (err) return cb(err);
-
-      //         return cb(null);
-      //       });
-      //   }));
+      parser.read((data) => {
+        console.log('DATA-----', data)
+        mysql
+          .batchInsert(TABLE_NAME, data, 1000)
+          .then(function (ids) {
+            console.log('success', ids)
+            parser.continue()
+          })
+          .catch(function (error) {
+            console.log('ERROR------', error)
+          });
+      })
+      return cb()
     }]
   }, function (error, results) {
     if (error) return _cb(error)
