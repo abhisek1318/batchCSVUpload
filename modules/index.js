@@ -1,5 +1,6 @@
 module.exports = {
-  initTable: require('./init-table/api').initTable,
+  createTable: require('./create-table/api').createTable,
   testTable: require('./test-table/api').testTable,
-  insertIntoTable: require('./parse-data/api').insertIntoTable
+  fetchCount: require('./fetch-count/api').fetchCount,
+  insertIntoTable: require('./insert-table/api').insertIntoTable,
 }

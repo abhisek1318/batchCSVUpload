@@ -11,13 +11,14 @@ const through2 = require('through2')
 
 
 class CSVReader {
-  constructor(filename, batchSize, columns) {
+  constructor(filename, batchSize, columns, total_lines_to_skip) {
     this.reader = fs.createReadStream(filename)
     this.batchSize = batchSize || 1000
     this.lineNumber = 0
     this.data = []
     this.parseOptions = { delimiter: '\t', relax_column_count: true }
     this.columns = columns
+    this.skip_count = total_lines_to_skip
   }
 
   read(callback) {
@@ -30,6 +31,10 @@ class CSVReader {
       }))
       .pipe(through2({ objectMode: true }, (row, enc, cb) => {
         ++this.lineNumber
+
+        if (this.lineNumber < this.skip_count) {
+          return cb(null, true)
+        }
 
         if (this.lineNumber == 1) return cb(null, true)
 

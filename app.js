@@ -1,41 +1,59 @@
 const async = require('async');
 
 const {
-  insertIntoTable,
   testTable,
-  initTable
+  createTable,
+  fetchCount,
+  insertIntoTable,
 } = require('./modules/index')
 
 const CSV_FILE_PATH = './utils/US_Accidents_Dec19.csv'
-const file_path = process.argv[4] || CSV_FILE_PATH
-const { TABLE_A, TABLE_B, DEFAULT_BATCH_SIZE } = require('./utils/constant');
+const file_path = CSV_FILE_PATH
+const { TABLE_A, TABLE_B, DEFAULT_BATCH_SIZE, TABLE_B_HEADERS } = require('./utils/constant');
+
+const DATA_TABLE = TABLE_A
+const REPORT_TABLE = TABLE_B
 
 async.auto({
-  table_exist: (cb) => {
+  report_table_exist: (cb) => {
 
     let dataObj = {
-      table_name: TABLE_B
+      table_name: REPORT_TABLE
     }
 
     testTable(dataObj, (err, exists) => {
       return cb(null, {
-        table_B_exist: exists
+        report_table_exist: exists
       })
     })
   },
-  should_resume_task: ['table_exist', function (result, cb) {
-    let { table_B_exist } = result.table_exist;
+  resume_task: ['report_table_exist', function (result, cb) {
+    let { report_table_exist } = result.report_table_exist;
 
-    if (!table_B_exist) return cb(null) // start from scratch
+    if (!report_table_exist) return cb(null) // start from scratch
+
+    let dataObj = {
+      table_name: REPORT_TABLE,
+      status: 'success'
+    }
+
+    fetchCount(dataObj, (err, count) => {
+      if (err) {
+        console.log('ERROR FETCHING STATUS REPORT', err)
+        return cb(err)
+      }
+
+      return cb(null, { skip_count: count })
+    })
   }],
-  create_table: ['should_resume_task', function (result, cb) {
+  create_data_table: ['resume_task', function (result, cb) {
 
     let dataObj = {
       file_path: file_path,
-      table_name: TABLE_A
+      table_name: DATA_TABLE
     }
 
-    initTable(dataObj, (err, res) => {
+    createTable(dataObj, (err, res) => {
       if (err) {
         console.log('ERROR WHILE CREATING TABLE', err)
         return cb(err)
@@ -44,13 +62,33 @@ async.auto({
       return cb(null, { headers: res.results })
     })
   }],
-  insert_into_table: ['create_table', function (result, cb) {
+  create_report_table: ['create_data_table', function (result, cb) {
+    let { report_table_exist } = result.report_table_exist;
+
+    if (report_table_exist) return cb(null)
 
     let dataObj = {
-      table_name: TABLE_A,
-      skip_row: 100,
+      table_name: REPORT_TABLE,
+      table_headers: TABLE_B_HEADERS
+    }
+
+    createTable(dataObj, (err, res) => {
+      if (err) {
+        console.log('ERROR WHILE CREATING TABLE', err)
+        return cb(err)
+      }
+
+      return cb(null, { headers: res.results })
+    })
+  }],
+  insert_into_data_table: ['create_report_table', function (result, cb) {
+
+    let dataObj = {
+      data_table: DATA_TABLE,
+      report_table: REPORT_TABLE,
+      skip_count: result.resume_task && result.resume_task.skip_count,
       batch_size: DEFAULT_BATCH_SIZE,
-      table_headers: result.create_table.headers,
+      table_headers: result.create_data_table && result.create_data_table.headers,
     }
 
     insertIntoTable(dataObj, (err, res) => {
