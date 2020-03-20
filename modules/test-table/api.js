@@ -1,8 +1,10 @@
 const mysql = require('../../utils/knex').mysql
 
-const testTable = (tableName, cb) => {
+const testTable = (data, cb) => {
+  let table_name = data.table_name
+  
   return mysql.schema
-    .hasTable(tableName)
+    .hasTable(table_name)
     .then((exist) => {
       return cb(null, exist)
     })

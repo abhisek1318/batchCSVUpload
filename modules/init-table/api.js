@@ -4,8 +4,8 @@ const async = require('async')
 const csvHeaders = require('csv-headers')
 const mysql = require('../../utils/knex').mysql
 
-
-const initTable = function (file_path, table_name, _cb) {
+const initTable = function (data, _cb) {
+  let { file_path, table_name } = data
 
   async.auto({
     list_data_headers: function (cb) {
@@ -30,11 +30,9 @@ const initTable = function (file_path, table_name, _cb) {
           })
         })
         .then(data => {
-          console.log(`TABLE HEADERS SET FOR ${table_name}`, data)
-          return cb(null, data);
+          return cb(null, { headers });
         })
         .catch(err => {
-          console.log('ERROR WHILE INSERTING TABLE HEADERS', err)
           return cb(err)
         })
     }]
@@ -42,7 +40,7 @@ const initTable = function (file_path, table_name, _cb) {
     if (error) return _cb(error)
 
     return _cb(null, {
-      results
+      results: results.create_new_table.headers
     })
   })
 }
