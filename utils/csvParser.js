@@ -6,49 +6,50 @@ const fs = require('fs'),
   parse = require("csv-parse"),
   iconv = require('iconv-lite');
 
+const csv = require('csv-stream')
+const through2 = require('through2')
+
+
 class CSVReader {
   constructor(filename, batchSize, columns) {
     this.reader = fs.createReadStream(filename)
     this.batchSize = batchSize || 1000
     this.lineNumber = 0
     this.data = []
-    this.parseOptions = { delimiter: '\t', quote: '"', columns: false, escape: ',', relax_column_count: true }
+    this.parseOptions = { delimiter: '\t', relax_column_count: true }
     this.columns = columns
-    this.options = {
-      delimiter: ',',
-      columns: true,
-      relax_column_count: true
-    }
   }
 
   read(callback) {
     this.reader
-      .pipe(es.split())
-      .pipe(es.mapSync(line => {
+      .pipe(csv.createStream({
+        endLine: '\n',
+        columns: this.columns,
+        escapeChar: '"',
+        enclosedChar: '"'
+      }))
+      .pipe(through2({ objectMode: true }, (row, enc, cb) => {
         ++this.lineNumber
 
-        if (this.lineNumber == 1) return
-
-        let arr = line.split(',')
-        var headers = this.columns;
-        var obj = {};
-
-        for (var j = 0; j < arr.length; j++) {
-          obj[headers[j].trim()] = arr[j].trim();
-        }
-        this.data.push(obj);
+        if (this.lineNumber == 1) return cb(null, true)
 
         if (this.lineNumber % this.batchSize === 0) {
           this.reader.pause();
           callback(this.data)
         }
+
+        this.data.push(row)
+        cb()
+      }))
+      .on('data', data => {
+        console.log('saved a row')
       })
-        .on('error', function (err) {
-          console.log('Error while reading file.', err)
-        })
-        .on('end', function () {
-          console.log('Read entirefile.')
-        }))
+      .on('end', () => {
+        console.log('end')
+      })
+      .on('error', err => {
+        console.error(err)
+      })
   }
 
   continue() {
