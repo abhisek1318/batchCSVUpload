@@ -9,6 +9,8 @@ module.exports = {
       password: config.mySqlPassword,
       database: config.mySqlDB
     },
-    searchPath: [config.mySqlSchema],
+    seeds: {
+      directory: __dirname + '/db/seeds'
+    },
   }
 }
