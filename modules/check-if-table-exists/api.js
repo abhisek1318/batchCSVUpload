@@ -1,8 +1,8 @@
-const mysql = require('../../utils/knex').mysql
+'use strict'
 
-const testTable = (data, cb) => {
-  let table_name = data.table_name
-  
+const { mysql } = require('../../utils/knex')
+
+const checkIfTableExists = (table_name, cb) => { 
   return mysql.schema
     .hasTable(table_name)
     .then((exists) => {
@@ -14,4 +14,4 @@ const testTable = (data, cb) => {
     });
 }
 
-module.exports.testTable = testTable
+module.exports.checkIfTableExists = checkIfTableExists

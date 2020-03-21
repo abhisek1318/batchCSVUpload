@@ -2,32 +2,29 @@
 
 const async = require('async')
 const mysql = require('../../utils/knex').mysql
-const testTable = require('../test-table/api').testTable
+const { checkIfTableExists }= require('../check-if-table-exists/api')
 
 const createTable = function (data, _cb) {
   let { table_name, table_headers } = data
 
   async.auto({
     check_table_if_exist: (cb) => {
-
-      let dataObj = {
-        table_name: table_name
-      }
-
-      testTable(dataObj, (err, exists) => {
+      checkIfTableExists(table_name, (err, exists) => {
         if (exists) {
-          return _cb(null, {})
-        }
-
-        else cb(null)
+          return cb(null, true)
+        } else cb(null, false)
       })
     },
     create_new_table: ['check_table_if_exist', function (result, cb) {
-      let headers = table_headers
+      let table_exist = result.check_table_if_exist
+
+      if (table_exist) {
+        return cb(null, { table_headers })
+      }
 
       mysql.schema
         .createTable(table_name, (table) => {
-          headers.forEach((col_name) => {
+          table_headers.forEach((col_name) => {
             if (col_name == 'id') {
               table.increments('id')
                 .primary()
@@ -38,7 +35,7 @@ const createTable = function (data, _cb) {
           })
         })
         .then(data => {
-          return cb(null, { headers });
+          return cb(null, { table_headers })
         })
         .catch(err => {
           return cb(err)
@@ -48,7 +45,7 @@ const createTable = function (data, _cb) {
     if (error) return _cb(error)
 
     return _cb(null, {
-      results: results.create_new_table.headers
+      results: results.create_new_table.table_headers
     })
   })
 }

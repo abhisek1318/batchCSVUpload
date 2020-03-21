@@ -1,6 +1,6 @@
 'use strict'
 
-const mysql = require('../../utils/knex').mysql
+const { mysql } = require('../../utils/knex')
 
 const fetchCount = function (data, _cb) {
   let { table_name } = data
@@ -16,7 +16,6 @@ const fetchCount = function (data, _cb) {
     })
     .catch((error) => {
       console.log(error)
-      log.error({ fetch: error })
       return _cb({ code: 'DB_FETCH_ERROR' })
     })
 }

@@ -1,13 +1,13 @@
 'use strict'
 
-const TABLE_A = 'Table-A'
-const TABLE_B = 'Table-B'
+const DATA_TABLE = 'Table-A'
+const STATUS_TABLE = 'Table-B'
 
 const DEFAULT_BATCH_SIZE = 2000
 
-const TABLE_B_HEADERS = ['id', 'status', 'batch_size'];
+const STATUS_TABLE_HEADERS = ['id', 'status', 'batch_size'];
 
-exports.TABLE_A = TABLE_A
-exports.TABLE_B = TABLE_B
-exports.TABLE_B_HEADERS = TABLE_B_HEADERS
+exports.DATA_TABLE = DATA_TABLE
+exports.STATUS_TABLE = STATUS_TABLE
+exports.STATUS_TABLE_HEADERS = STATUS_TABLE_HEADERS
 exports.DEFAULT_BATCH_SIZE = DEFAULT_BATCH_SIZE
