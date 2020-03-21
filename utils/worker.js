@@ -8,10 +8,13 @@ const setupWorkerProcesses = () => {
 
   for (let i = 0; i < numCores; i++) {
     workers.push(cluster.fork());
-
+    //here are the masters
+    
     workers[i].on('message', function (message) {
-      console.log(message);
+      console.log(message)
     });
+
+    workers[i].send({ msg: 'test' })
   }
 
   cluster.on('online', function (worker) {
@@ -27,8 +30,9 @@ const setupWorkerProcesses = () => {
   });
 };
 
-const setupServer = (isClusterRequired) => {
-  if (isClusterRequired && cluster.isMaster) {
+const setupServer = () => {
+
+  if (cluster.isMaster) {
     setupWorkerProcesses();
   }
 };

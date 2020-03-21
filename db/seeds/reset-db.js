@@ -1,10 +1,10 @@
-const { TABLE_A, TABLE_B } = require('../../utils/constant')
+const { DATA_TABLE, STATUS_TABLE } = require('../../utils/constant')
 
 exports.seed = knex => {
   return (
     knex.schema
-      .dropTableIfExists(TABLE_A)
-      .dropTableIfExists(TABLE_B)
+      .dropTableIfExists(DATA_TABLE)
+      .dropTableIfExists(STATUS_TABLE)
       .then(() => {
       })
       .catch((err) => {

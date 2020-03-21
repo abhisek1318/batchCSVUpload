@@ -6,13 +6,17 @@ const fetchCount = function (data, _cb) {
   let { table_name } = data
 
   let table = mysql(table_name)
-    .count('*')
+    .sum('batch_size')
 
-  if (data.status === 'completed') table.where(`${table.status}`, data.status)
+  // if (data.status === 'completed') {
+  //   table.where(`${table.status}`, data.status)
+  // }
+  // .orderBy('id', 'desc')
+  // .first('id', 'completed_at')
 
   table
     .then((table) => {
-      return _cb(null, table[0]['count(*)'])
+      return _cb(null, table[0]['sum(`batch_size`)'])
     })
     .catch((error) => {
       console.log(error)

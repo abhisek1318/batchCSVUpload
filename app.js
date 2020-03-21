@@ -77,7 +77,7 @@ async.auto({
         return cb(err)
       }
 
-      return cb(null, { skip_count: count })
+      return cb(null, { current_status_line_count: count })
     })
   }],
   insert_into_data_table: [
@@ -90,11 +90,9 @@ async.auto({
         data_table: DATA_TABLE,
         report_table: STATUS_TABLE,
         batch_size: DEFAULT_BATCH_SIZE,
-        skip_count: result.get_current_status_count.skip_count,
+        offset: result.get_current_status_count.current_status_line_count,
         table_headers: result.list_table_headers_from_csv.table_headers,
       }
-
-      console.log(dataObj)
 
       insertIntoTable(dataObj, (err, res) => {
         if (err) {

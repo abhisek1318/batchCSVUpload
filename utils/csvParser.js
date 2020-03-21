@@ -5,12 +5,12 @@ const csv = require('csv-stream')
 const through2 = require('through2')
 
 class CSVReader {
-  constructor(filename, batchSize, columns, total_lines_to_skip) {
+  constructor(filename, batchSize, columns, offset) {
     this.data = []
     this.lineNumber = 0
     this.columns = columns
     this.batchSize = batchSize || 1000
-    this.skip_count = total_lines_to_skip
+    this.offset = offset
     this.reader = fs.createReadStream(filename)
   }
 
@@ -25,11 +25,11 @@ class CSVReader {
       .pipe(through2({ objectMode: true }, (row, enc, cb) => {
         ++this.lineNumber
 
-        if (this.lineNumber < this.skip_count || this.lineNumber == 1) {
+        if (this.lineNumber < (this.offset + 1) || this.lineNumber == 1) { //skip line containing headers
           return cb(null, true)
         }
 
-        if (this.lineNumber % this.batchSize === 0) {
+        if (this.data.length != 0 && this.data.length % this.batchSize === 0) {
           this.reader.pause();
           callback(this.data)
         }
