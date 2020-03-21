@@ -5,8 +5,8 @@ const testTable = (data, cb) => {
   
   return mysql.schema
     .hasTable(table_name)
-    .then((exist) => {
-      return cb(null, exist)
+    .then((exists) => {
+      return cb(null, exists)
     })
     .catch(function (err) {
       console.log(err)
